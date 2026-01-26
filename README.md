@@ -1,19 +1,18 @@
 # annual-highs
 
-A React application that fetches the daily high temperature forecast for zip code 97212 (Portland, OR) using the OpenWeatherMap free tier API.
+A React application that fetches historical daily high temperature data for zip code 97212 (Portland, OR) using the Open-Meteo free API.
 
 ## Features
 
-- Fetches 5-day weather forecast from OpenWeatherMap
+- Fetches historical weather data for each day of last year
 - Displays daily high temperatures in a table format
 - Clean, modern UI built with React and Vite
-- Uses OpenWeatherMap's free tier (no subscription required)
+- Uses Open-Meteo's free API (no API key required)
 
 ## Prerequisites
 
 - Node.js (v20 or higher)
 - npm (v10 or higher)
-- OpenWeatherMap API key (free tier available)
 
 ## Installation
 
@@ -37,34 +36,17 @@ npm run dev
 
 2. Open your browser and navigate to `http://localhost:5173`
 
-3. Enter your OpenWeatherMap API key in the input field
+3. Click "Fetch Historical Temperature Data" to retrieve historical high temperatures for each day of last year
 
-4. Click "Fetch Temperature Data" to retrieve the 5-day temperature forecast
+## Data Source
 
-## Getting an OpenWeatherMap API Key
+This application uses the [Open-Meteo API](https://open-meteo.com/), a free and open-source weather API that provides:
+- Historical weather data
+- No API key required
+- No rate limits for reasonable use
+- High-quality data from national weather services
 
-1. Visit [OpenWeatherMap Sign Up](https://home.openweathermap.org/users/sign_up)
-2. Create a free account
-3. Navigate to the "API keys" tab in your account dashboard
-4. Copy the default API key (or create a new one)
-5. Paste the API key into the application
-
-**Note:** New API keys may take a few minutes to activate. If you receive an authentication error, wait 5-10 minutes and try again.
-
-**Security Note:** This application uses client-side API calls. For production use, consider implementing a backend proxy to keep your API key secure. Environment variables with the `VITE_` prefix are exposed in the client-side bundle.
-
-### Alternative: Using Environment Variables
-
-You can also configure your API key using environment variables:
-
-1. Create a `.env.local` file in the project root:
-```bash
-VITE_OPENWEATHERMAP_API_KEY=your_api_key_here
-```
-
-2. The application will automatically use this key if no key is entered in the UI
-
-**Important:** Never commit your `.env.local` file to version control. It's already included in `.gitignore`.
+The app fetches daily maximum temperatures for Portland, OR (coordinates: 45.5372°N, 122.6508°W) for the previous calendar year.
 
 ## Build for Production
 
@@ -87,24 +69,25 @@ The built files will be in the `dist` directory.
 - React 19
 - Vite 7
 - JavaScript (ES6+)
-- OpenWeatherMap API (Free Tier)
+- Open-Meteo API (Free)
 
 ## API Details
 
-This application uses the OpenWeatherMap 5-day/3-hour forecast API endpoint:
-- **Endpoint:** `https://api.openweathermap.org/data/2.5/forecast`
+This application uses the Open-Meteo Archive API endpoint:
+- **Endpoint:** `https://archive-api.open-meteo.com/v1/archive`
 - **Parameters:**
-  - `zip`: ZIP code and country code (e.g., 97212,US)
-  - `appid`: Your API key
-  - `units`: imperial (for Fahrenheit)
-- **Free Tier Limits:**
-  - 60 calls/minute
-  - 1,000,000 calls/month
-  - 5-day forecast with 3-hour intervals
+  - `latitude`: Latitude of the location (45.5372 for Portland, OR)
+  - `longitude`: Longitude of the location (-122.6508 for Portland, OR)
+  - `start_date`: Start date in YYYY-MM-DD format (January 1st of last year)
+  - `end_date`: End date in YYYY-MM-DD format (December 31st of last year)
+  - `daily`: Daily weather variable (temperature_2m_max for daily maximum temperature)
+  - `temperature_unit`: fahrenheit
+  - `timezone`: America/Los_Angeles
+- **Free Tier:** No API key required, no rate limits for reasonable use
 
 ## Example Response
 
-The app processes OpenWeatherMap's forecast data to extract daily high temperatures. The forecast provides data points every 3 hours, and the app calculates the maximum temperature for each day.
+The app processes Open-Meteo's historical data to extract daily high temperatures for the entire previous year (365 or 366 days).
 
 ## Troubleshooting
 
@@ -148,9 +131,8 @@ Try the following solutions in order:
 
 ### API Issues
 
-- **"Invalid API key" error:** Ensure your API key is correct and has been activated (may take 5-10 minutes for new keys)
-- **"API rate limit exceeded" error:** The free tier allows 60 calls per minute. Wait a minute before trying again.
-- **CORS errors:** This app makes direct API calls from the browser. If you encounter CORS issues, ensure you're using the correct API endpoint.
+- **Network errors:** Ensure you have an active internet connection
+- **CORS errors:** This app makes direct API calls from the browser. The Open-Meteo API supports CORS, so this should work without issues.
 
 ## License
 
