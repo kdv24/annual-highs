@@ -51,7 +51,12 @@ function App() {
         const dateStr = date.toISOString().split('T')[0].replace(/-/g, '')
         
         // Weather Underground API endpoint for historical data
-        // Format: https://api.weather.com/v1/location/{zipCode}/observations/historical.json?apiKey={apiKey}&startDate={dateStr}&endDate={dateStr}
+        // IMPORTANT: This is a placeholder URL structure. The actual endpoint may vary.
+        // Verify the correct API endpoint format from Weather Underground API documentation:
+        // https://www.wunderground.com/weather/api/d/docs
+        // Common alternatives:
+        // - https://api.weather.com/v2/pws/observations/historical
+        // - https://api.wunderground.com/api/{apiKey}/history_{dateStr}/q/{zipCode}.json
         const url = `https://api.weather.com/v1/location/${zipCode}/observations/historical.json?apiKey=${apiKey}&startDate=${dateStr}&endDate=${dateStr}`
         
         try {
@@ -73,7 +78,9 @@ function App() {
           const data = await response.json()
           
           // Extract high temperature from the response
-          // Note: The exact structure depends on the API response format
+          // IMPORTANT: The response structure below is an approximation.
+          // Verify the actual structure from Weather Underground API documentation.
+          // The path to temperature data may vary (e.g., data.observations[0].metric.tempHigh)
           const highTemp = data.observations?.[0]?.imperial?.tempMax || 'N/A'
           
           results.push({

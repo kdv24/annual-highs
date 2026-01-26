@@ -47,6 +47,7 @@ npm run dev
 2. Sign up for an account
 3. Subscribe to a plan that includes historical data access
 4. Copy your API key and paste it into the application
+5. **Important**: Verify the API endpoint URL in `src/App.jsx` matches your API documentation, as endpoint formats may vary
 
 **Note:** Weather Underground API requires a paid subscription for historical data access. The free tier may have limited functionality.
 
