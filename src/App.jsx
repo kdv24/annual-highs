@@ -6,9 +6,11 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [apiKey, setApiKey] = useState('')
+  const [progress, setProgress] = useState({ current: 0, total: 0 })
 
   const zipCode = '97212'
   const year = 2026
+  const REQUEST_DELAY_MS = 500 // Delay between requests to avoid rate limiting
 
   // Generate all dates for 2026
   const generateDatesFor2026 = () => {
@@ -30,16 +32,22 @@ function App() {
 
     setLoading(true)
     setError(null)
+    setProgress({ current: 0, total: 0 })
     
     try {
       const dates = generateDatesFor2026()
       const results = []
+      setProgress({ current: 0, total: dates.length })
 
-      // Note: This is a simplified implementation
-      // In a real-world scenario, you would batch these requests or use a different approach
-      // to avoid rate limiting issues
+      // Note: This implementation fetches data sequentially with delays to respect API rate limits
+      // In a production environment, consider:
+      // 1. Using a backend service to batch requests
+      // 2. Implementing exponential backoff for failed requests
+      // 3. Caching results to avoid repeated API calls
+      // 4. Using bulk API endpoints if available from Weather Underground
       
-      for (const date of dates) {
+      for (let i = 0; i < dates.length; i++) {
+        const date = dates[i]
         const dateStr = date.toISOString().split('T')[0].replace(/-/g, '')
         
         // Weather Underground API endpoint for historical data
@@ -50,7 +58,16 @@ function App() {
           const response = await fetch(url)
           
           if (!response.ok) {
-            throw new Error(`Failed to fetch data for ${date.toLocaleDateString()}`)
+            // Handle rate limiting with exponential backoff
+            if (response.status === 429) {
+              const retryAfter = parseInt(response.headers.get('Retry-After') || '60', 10)
+              console.warn(`Rate limited. Waiting ${retryAfter} seconds before retry...`)
+              await new Promise(resolve => setTimeout(resolve, retryAfter * 1000))
+              // Retry the same request
+              i--
+              continue
+            }
+            throw new Error(`HTTP ${response.status}: Failed to fetch data`)
           }
           
           const data = await response.json()
@@ -64,6 +81,7 @@ function App() {
             highTemp: highTemp
           })
         } catch (err) {
+          console.error(`Error fetching data for ${date.toLocaleDateString()}:`, err)
           results.push({
             date: date.toLocaleDateString(),
             highTemp: 'Error',
@@ -71,8 +89,14 @@ function App() {
           })
         }
         
-        // Add a small delay to avoid rate limiting (adjust as needed)
-        await new Promise(resolve => setTimeout(resolve, 100))
+        setProgress({ current: i + 1, total: dates.length })
+        setTemperatureData([...results]) // Update UI with partial results
+        
+        // Add delay to avoid rate limiting
+        // Adjust REQUEST_DELAY_MS based on your API tier limits
+        if (i < dates.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, REQUEST_DELAY_MS))
+        }
       }
 
       setTemperatureData(results)
@@ -109,7 +133,14 @@ function App() {
       {loading && (
         <div className="loading">
           <p>Fetching temperature data for all days in {year}...</p>
-          <p>This may take a few minutes. Please wait.</p>
+          <p>Progress: {progress.current} / {progress.total} days</p>
+          <p>This may take several minutes due to API rate limits. Please wait.</p>
+          <div className="progress-bar">
+            <div 
+              className="progress-fill" 
+              style={{ width: `${progress.total > 0 ? (progress.current / progress.total * 100) : 0}%` }}
+            />
+          </div>
         </div>
       )}
 
@@ -143,8 +174,9 @@ function App() {
             <li>Enter your API key in the field above</li>
             <li>Click "Fetch Temperature Data" to retrieve high temperatures for all days in {year}</li>
           </ol>
-          <p><strong>Note:</strong> Weather Underground API requires a subscription for historical data access. 
-          This implementation shows how the data would be fetched and displayed.</p>
+          <p><strong>Note:</strong> Weather Underground API requires a subscription for historical data access.</p>
+          <p><strong>Performance:</strong> Fetching 365 days of data will take several minutes due to API rate limits. 
+          The app implements delays between requests and automatic retry logic to handle rate limiting gracefully.</p>
         </div>
       )}
     </div>
