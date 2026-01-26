@@ -38,16 +38,28 @@ function App() {
       
       // Process the historical data
       if (data.daily && data.daily.time && data.daily.temperature_2m_max) {
-        data.daily.time.forEach((dateStr, index) => {
-          const temp = data.daily.temperature_2m_max[index]
-          const date = new Date(dateStr)
-          results.push({
-            date: date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }),
-            highTemp: Math.round(temp),
-            sortDate: dateStr
+        // Validate that arrays have the same length
+        const timeArray = data.daily.time
+        const tempArray = data.daily.temperature_2m_max
+        
+        if (timeArray.length === tempArray.length) {
+          timeArray.forEach((dateStr, index) => {
+            const temp = tempArray[index]
+            // Skip entries with null or undefined temperatures
+            if (temp !== null && temp !== undefined) {
+              const date = new Date(dateStr)
+              results.push({
+                date: date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }),
+                highTemp: Math.round(temp),
+                sortDate: dateStr
+              })
+            }
           })
-        })
+        }
       }
+      
+      // Sort results by date to ensure chronological order
+      results.sort((a, b) => a.sortDate.localeCompare(b.sortDate))
       
       setTemperatureData(results)
     } catch (err) {
