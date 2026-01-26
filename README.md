@@ -51,6 +51,8 @@ npm run dev
 
 **Note:** New API keys may take a few minutes to activate. If you receive an authentication error, wait 5-10 minutes and try again.
 
+**Security Note:** This application uses client-side API calls. For production use, consider implementing a backend proxy to keep your API key secure. Environment variables with the `VITE_` prefix are exposed in the client-side bundle.
+
 ### Alternative: Using Environment Variables
 
 You can also configure your API key using environment variables:

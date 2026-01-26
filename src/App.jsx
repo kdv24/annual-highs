@@ -51,7 +51,7 @@ function App() {
       
       data.list.forEach(item => {
         const date = new Date(item.dt * 1000)
-        const dateStr = date.toLocaleDateString()
+        const dateStr = date.toISOString().split('T')[0]
         const temp = item.main.temp_max
         
         if (!dailyHighs[dateStr] || dailyHighs[dateStr] < temp) {
@@ -60,15 +60,17 @@ function App() {
       })
       
       // Convert to array format
-      Object.entries(dailyHighs).forEach(([date, temp]) => {
+      Object.entries(dailyHighs).forEach(([dateStr, temp]) => {
+        const date = new Date(dateStr)
         results.push({
-          date: date,
-          highTemp: Math.round(temp)
+          date: date.toLocaleDateString(),
+          highTemp: Math.round(temp),
+          sortDate: dateStr
         })
       })
       
       // Sort by date
-      results.sort((a, b) => new Date(a.date) - new Date(b.date))
+      results.sort((a, b) => a.sortDate.localeCompare(b.sortDate))
       
       setTemperatureData(results)
     } catch (err) {
