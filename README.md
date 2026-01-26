@@ -108,6 +108,46 @@ The app processes OpenWeatherMap's forecast data to extract daily high temperatu
 
 ## Troubleshooting
 
+### npm install Issues
+
+If you encounter permission errors or cache-related errors during `npm install`, such as:
+```
+npm error EACCES: permission denied
+npm error code EEXIST
+```
+
+Try the following solutions in order:
+
+1. **Clear the npm cache:**
+   ```bash
+   npm cache clean --force
+   ```
+
+2. **If that doesn't work, verify and fix cache permissions:**
+   ```bash
+   npm cache verify
+   ```
+
+3. **Remove node_modules and package-lock.json, then reinstall:**
+   ```bash
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+
+4. **On macOS/Linux, if permission issues persist, fix npm cache permissions:**
+   ```bash
+   sudo chown -R $(whoami) ~/.npm
+   ```
+
+5. **As a last resort, use the --force flag:**
+   ```bash
+   npm install --force
+   ```
+
+**Note:** If you continue to experience issues, ensure you have the correct Node.js version (v20 or higher) and npm version (v10 or higher).
+
+### API Issues
+
 - **"Invalid API key" error:** Ensure your API key is correct and has been activated (may take 5-10 minutes for new keys)
 - **"API rate limit exceeded" error:** The free tier allows 60 calls per minute. Wait a minute before trying again.
 - **CORS errors:** This app makes direct API calls from the browser. If you encounter CORS issues, ensure you're using the correct API endpoint.
