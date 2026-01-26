@@ -5,71 +5,60 @@ function App() {
   const [temperatureData, setTemperatureData] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [apiKey, setApiKey] = useState(import.meta.env.VITE_OPENWEATHERMAP_API_KEY || '')
 
   const zipCode = '97212'
-  const FORECAST_DAYS = 5 // OpenWeatherMap free tier provides 5-day forecast
+  // Coordinates for Portland, OR (97212)
+  const latitude = 45.5372
+  const longitude = -122.6508
 
   const fetchTemperatureData = async () => {
-    if (!apiKey) {
-      setError('Please enter your OpenWeatherMap API key')
-      return
-    }
-
     setLoading(true)
     setError(null)
     
     try {
-      // OpenWeatherMap free tier provides:
-      // - Current weather data
-      // - 5-day/3-hour forecast (40 data points)
-      // We'll fetch the 5-day forecast and extract daily high temperatures
+      // Calculate date range for last year
+      const today = new Date()
+      const lastYear = today.getFullYear() - 1
+      const startDate = `${lastYear}-01-01`
+      const endDate = `${lastYear}-12-31`
       
       const results = []
 
-      // OpenWeatherMap API endpoint for 5-day forecast
-      // Using zip code for location
-      const url = `https://api.openweathermap.org/data/2.5/forecast?zip=${zipCode},US&appid=${apiKey}&units=imperial`
+      // Open-Meteo API endpoint for historical weather data
+      // This API is completely free and doesn't require an API key
+      const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&start_date=${startDate}&end_date=${endDate}&daily=temperature_2m_max&temperature_unit=fahrenheit&timezone=America/Los_Angeles`
       
       const response = await fetch(url)
       
       if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('Invalid API key. Please check your OpenWeatherMap API key.')
-        }
-        if (response.status === 429) {
-          throw new Error('API rate limit exceeded. Please try again later.')
-        }
         throw new Error(`HTTP ${response.status}: Failed to fetch data`)
       }
       
       const data = await response.json()
       
-      // Process the forecast data to extract daily high temperatures
-      // The forecast contains 3-hour intervals, so we need to group by day
-      const dailyHighs = {}
-      
-      data.list.forEach(item => {
-        const date = new Date(item.dt * 1000)
-        const dateStr = date.toISOString().split('T')[0]
-        const temp = item.main.temp_max
+      // Process the historical data
+      if (data.daily && data.daily.time && data.daily.temperature_2m_max) {
+        // Validate that arrays have the same length
+        const timeArray = data.daily.time
+        const tempArray = data.daily.temperature_2m_max
         
-        if (!dailyHighs[dateStr] || dailyHighs[dateStr] < temp) {
-          dailyHighs[dateStr] = temp
+        if (timeArray.length === tempArray.length) {
+          timeArray.forEach((dateStr, index) => {
+            const temp = tempArray[index]
+            // Skip entries with null or undefined temperatures
+            if (temp !== null && temp !== undefined) {
+              const date = new Date(dateStr)
+              results.push({
+                date: date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }),
+                highTemp: Math.round(temp),
+                sortDate: dateStr
+              })
+            }
+          })
         }
-      })
+      }
       
-      // Convert to array format
-      Object.entries(dailyHighs).forEach(([dateStr, temp]) => {
-        const date = new Date(dateStr)
-        results.push({
-          date: date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }),
-          highTemp: Math.round(temp),
-          sortDate: dateStr
-        })
-      })
-      
-      // Sort by date
+      // Sort results by date to ensure chronological order
       results.sort((a, b) => a.sortDate.localeCompare(b.sortDate))
       
       setTemperatureData(results)
@@ -84,20 +73,12 @@ function App() {
     <div className="app">
       <header>
         <h1>Daily High Temperatures for {zipCode}</h1>
-        <p>Next {FORECAST_DAYS} Days Forecast</p>
+        <p>Historical Data for Last Year</p>
       </header>
 
       <div className="api-key-section">
-        <label htmlFor="apiKey">OpenWeatherMap API Key:</label>
-        <input
-          id="apiKey"
-          type="password"
-          value={apiKey}
-          onChange={(e) => setApiKey(e.target.value)}
-          placeholder="Enter your API key"
-        />
-        <button onClick={fetchTemperatureData} disabled={loading || !apiKey}>
-          {loading ? 'Loading...' : 'Fetch Temperature Data'}
+        <button onClick={fetchTemperatureData} disabled={loading}>
+          {loading ? 'Loading...' : 'Fetch Historical Temperature Data'}
         </button>
       </div>
 
@@ -105,14 +86,14 @@ function App() {
 
       {loading && (
         <div className="loading">
-          <p>Fetching temperature forecast data...</p>
-          <p>This will only take a moment.</p>
+          <p>Fetching historical temperature data for last year...</p>
+          <p>This may take a moment.</p>
         </div>
       )}
 
       {temperatureData.length > 0 && !loading && (
         <div className="results">
-          <h2>Temperature Forecast ({temperatureData.length} days)</h2>
+          <h2>Historical High Temperatures ({temperatureData.length} days)</h2>
           <table>
             <thead>
               <tr>
@@ -135,20 +116,9 @@ function App() {
       {temperatureData.length === 0 && !loading && (
         <div className="instructions">
           <h2>Instructions</h2>
-          <ol>
-            <li>Get a free OpenWeatherMap API key from <a href="https://openweathermap.org/api" target="_blank" rel="noopener noreferrer">OpenWeatherMap</a></li>
-            <li>Enter your API key in the field above</li>
-            <li>Click "Fetch Temperature Data" to retrieve the {FORECAST_DAYS}-day temperature forecast</li>
-          </ol>
-          <p><strong>Note:</strong> OpenWeatherMap free tier provides current weather and 5-day forecast data.</p>
-          <p><strong>How to get your API key:</strong></p>
-          <ol>
-            <li>Visit <a href="https://home.openweathermap.org/users/sign_up" target="_blank" rel="noopener noreferrer">OpenWeatherMap Sign Up</a></li>
-            <li>Create a free account</li>
-            <li>Navigate to API keys section in your account</li>
-            <li>Copy the default API key or create a new one</li>
-            <li>Note: It may take a few minutes for new API keys to activate</li>
-          </ol>
+          <p>Click the button above to fetch historical high temperature data for each day of last year.</p>
+          <p><strong>Data Source:</strong> This application uses the <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo API</a>, which is completely free and doesn't require an API key.</p>
+          <p><strong>Note:</strong> The data shows daily high temperatures for Portland, OR (ZIP code {zipCode}) for the previous calendar year.</p>
         </div>
       )}
     </div>
