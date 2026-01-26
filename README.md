@@ -1,19 +1,19 @@
 # annual-highs
 
-A React application that fetches the daily high temperature for zip code 97212 (Portland, OR) for all days in 2026 using the Weather Underground API.
+A React application that fetches the daily high temperature forecast for zip code 97212 (Portland, OR) using the OpenWeatherMap free tier API.
 
 ## Features
 
-- Fetches historical weather data from Weather Underground
+- Fetches 5-day weather forecast from OpenWeatherMap
 - Displays daily high temperatures in a table format
 - Clean, modern UI built with React and Vite
-- Handles all 365 days of 2026
+- Uses OpenWeatherMap's free tier (no subscription required)
 
 ## Prerequisites
 
 - Node.js (v20 or higher)
 - npm (v10 or higher)
-- Weather Underground API key (requires subscription for historical data)
+- OpenWeatherMap API key (free tier available)
 
 ## Installation
 
@@ -37,19 +37,32 @@ npm run dev
 
 2. Open your browser and navigate to `http://localhost:5173`
 
-3. Enter your Weather Underground API key in the input field
+3. Enter your OpenWeatherMap API key in the input field
 
-4. Click "Fetch Temperature Data" to retrieve high temperatures for all days in 2026
+4. Click "Fetch Temperature Data" to retrieve the 5-day temperature forecast
 
-## Getting a Weather Underground API Key
+## Getting an OpenWeatherMap API Key
 
-1. Visit [Weather Underground API](https://www.wunderground.com/weather/api)
-2. Sign up for an account
-3. Subscribe to a plan that includes historical data access
-4. Copy your API key and paste it into the application
-5. **Important**: Verify the API endpoint URL in `src/App.jsx` matches your API documentation, as endpoint formats may vary
+1. Visit [OpenWeatherMap Sign Up](https://home.openweathermap.org/users/sign_up)
+2. Create a free account
+3. Navigate to the "API keys" tab in your account dashboard
+4. Copy the default API key (or create a new one)
+5. Paste the API key into the application
 
-**Note:** Weather Underground API requires a paid subscription for historical data access. The free tier may have limited functionality.
+**Note:** New API keys may take a few minutes to activate. If you receive an authentication error, wait 5-10 minutes and try again.
+
+### Alternative: Using Environment Variables
+
+You can also configure your API key using environment variables:
+
+1. Create a `.env.local` file in the project root:
+```bash
+VITE_OPENWEATHERMAP_API_KEY=your_api_key_here
+```
+
+2. The application will automatically use this key if no key is entered in the UI
+
+**Important:** Never commit your `.env.local` file to version control. It's already included in `.gitignore`.
 
 ## Build for Production
 
@@ -72,7 +85,30 @@ The built files will be in the `dist` directory.
 - React 19
 - Vite 7
 - JavaScript (ES6+)
-- Weather Underground API
+- OpenWeatherMap API (Free Tier)
+
+## API Details
+
+This application uses the OpenWeatherMap 5-day/3-hour forecast API endpoint:
+- **Endpoint:** `https://api.openweathermap.org/data/2.5/forecast`
+- **Parameters:**
+  - `zip`: ZIP code and country code (e.g., 97212,US)
+  - `appid`: Your API key
+  - `units`: imperial (for Fahrenheit)
+- **Free Tier Limits:**
+  - 60 calls/minute
+  - 1,000,000 calls/month
+  - 5-day forecast with 3-hour intervals
+
+## Example Response
+
+The app processes OpenWeatherMap's forecast data to extract daily high temperatures. The forecast provides data points every 3 hours, and the app calculates the maximum temperature for each day.
+
+## Troubleshooting
+
+- **"Invalid API key" error:** Ensure your API key is correct and has been activated (may take 5-10 minutes for new keys)
+- **"API rate limit exceeded" error:** The free tier allows 60 calls per minute. Wait a minute before trying again.
+- **CORS errors:** This app makes direct API calls from the browser. If you encounter CORS issues, ensure you're using the correct API endpoint.
 
 ## License
 
