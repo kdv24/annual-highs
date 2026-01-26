@@ -63,7 +63,7 @@ function App() {
       Object.entries(dailyHighs).forEach(([dateStr, temp]) => {
         const date = new Date(dateStr)
         results.push({
-          date: date.toLocaleDateString(),
+          date: date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }),
           highTemp: Math.round(temp),
           sortDate: dateStr
         })
