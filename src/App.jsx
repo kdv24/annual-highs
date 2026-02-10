@@ -60,8 +60,32 @@ function App() {
       
       // Sort results by date to ensure chronological order
       results.sort((a, b) => a.sortDate.localeCompare(b.sortDate))
-      
-      setTemperatureData(results)
+
+      // Find the correct year (should be the year with the most entries)
+      const yearCounts = {};
+      results.forEach(r => {
+        const yr = r.sortDate.slice(0, 4);
+        yearCounts[yr] = (yearCounts[yr] || 0) + 1;
+      });
+      const correctYear = Object.entries(yearCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+      // Filter to only dates in the correct year
+      const filtered = results.filter(r => r.sortDate.startsWith(correctYear));
+      // Ensure Jan 1 and Dec 31 are present
+      const jan1 = `${correctYear}-01-01`;
+      const dec31 = `${correctYear}-12-31`;
+      let final = filtered.slice();
+      // Always add Jan 1 if missing and available in results
+      if (!final.some(r => r.sortDate === jan1)) {
+        const jan1Entry = results.find(r => r.sortDate === jan1);
+        if (jan1Entry) final.unshift(jan1Entry);
+      }
+      // Always add Dec 31 if missing and available in results
+      if (!final.some(r => r.sortDate === dec31)) {
+        const dec31Entry = results.find(r => r.sortDate === dec31);
+        if (dec31Entry) final.push(dec31Entry);
+      }
+
+      setTemperatureData(final)
     } catch (err) {
       setError('Failed to fetch temperature data: ' + err.message)
     } finally {
@@ -92,24 +116,56 @@ function App() {
       )}
 
       {temperatureData.length > 0 && !loading && (
-        <div className="results">
-          <h2>Historical High Temperatures ({temperatureData.length} days)</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>High Temperature (°F)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {temperatureData.map((item, index) => (
-                <tr key={index}>
-                  <td>{item.date}</td>
-                  <td>{item.highTemp}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="results" id="results-to-print">
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+            <h2 style={{margin: 0}}>Historical High Temperatures</h2>
+            <button className="print-btn" onClick={() => window.print()}>Download/Print PDF</button>
+          </div>
+          {(() => {
+            // Group by month
+            const months = [
+              'January', 'February', 'March', 'April', 'May', 'June',
+              'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            // Group by month, always sort by day to ensure Dec 31 is last in December
+            const byMonth = Array.from({ length: 12 }, () => []);
+            temperatureData.forEach(item => {
+              const [month, day] = item.date.split('/');
+              byMonth[parseInt(month, 10) - 1].push({ ...item, day: parseInt(day, 10) });
+            });
+            byMonth.forEach((arr, idx) => {
+              byMonth[idx] = arr.sort((a, b) => a.day - b.day);
+            });
+            return months.map((monthName, mIdx) => (
+              <div key={monthName} className="month-block">
+                <h3>{monthName}</h3>
+                <table className="calendar-table">
+                  <tbody>
+                    {(() => {
+                      const rows = [];
+                      const monthData = byMonth[mIdx];
+                      for (let i = 0; i < monthData.length; i += 7) {
+                        rows.push(
+                          <tr key={i}>
+                            {monthData.slice(i, i + 7).map((item, j) => [
+                              <td key={`d${i+j}`} className="date-cell">{item.day}</td>,
+                              <td key={`t${i+j}`} className="temp-cell">{item.highTemp}<span style={{fontSize: '0.9em'}}>&deg;</span></td>
+                            ])}
+                            {/* Fill empty cells if last row is incomplete */}
+                            {Array.from({ length: 7 - (monthData.slice(i, i + 7).length) }).map((_, k) => [
+                              <td key={`ed${i+k}`}></td>,
+                              <td key={`et${i+k}`}></td>
+                            ])}
+                          </tr>
+                        );
+                      }
+                      return rows;
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            ));
+          })()}
         </div>
       )}
 
