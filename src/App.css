@@ -31,8 +31,31 @@
     margin: 0;
     padding: 0;
   }
-  .print-btn {
+  .print-btn,
+  header,
+  .results h2 {
     display: none !important;
+  }
+  .app, .results, .month-block, .calendar-table, .calendar-table td, .calendar-table th, th, td, body, html {
+    font-size: 10px !important;
+    line-height: 1.1 !important;
+  }
+  .calendar-table th, .calendar-table td, th, td {
+    padding-top: 0.55em !important;
+    padding-bottom: 0.55em !important;
+  }
+  .month-block {
+    margin-bottom: 3rem !important;
+    page-break-inside: avoid !important;
+  }
+  .page-break-after {
+    page-break-after: always !important;
+  }
+  .calendar-table {
+    margin-bottom: 0.3rem !important;
+  }
+  .results {
+    margin-top: 0.5rem !important;
   }
 }
 /* Calendar-style table for monthly display */

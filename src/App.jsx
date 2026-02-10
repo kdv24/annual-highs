@@ -136,35 +136,39 @@ function App() {
             byMonth.forEach((arr, idx) => {
               byMonth[idx] = arr.sort((a, b) => a.day - b.day);
             });
-            return months.map((monthName, mIdx) => (
-              <div key={monthName} className="month-block">
-                <h3>{monthName}</h3>
-                <table className="calendar-table">
-                  <tbody>
-                    {(() => {
-                      const rows = [];
-                      const monthData = byMonth[mIdx];
-                      for (let i = 0; i < monthData.length; i += 7) {
-                        rows.push(
-                          <tr key={i}>
-                            {monthData.slice(i, i + 7).map((item, j) => [
-                              <td key={`d${i+j}`} className="date-cell">{item.day}</td>,
-                              <td key={`t${i+j}`} className="temp-cell">{item.highTemp}<span style={{fontSize: '0.9em'}}>&deg;</span></td>
-                            ])}
-                            {/* Fill empty cells if last row is incomplete */}
-                            {Array.from({ length: 7 - (monthData.slice(i, i + 7).length) }).map((_, k) => [
-                              <td key={`ed${i+k}`}></td>,
-                              <td key={`et${i+k}`}></td>
-                            ])}
-                          </tr>
-                        );
-                      }
-                      return rows;
-                    })()}
-                  </tbody>
-                </table>
-              </div>
-            ));
+            return months.map((monthName, mIdx) => {
+              // Add 'page-break-after' class to June (mIdx === 5)
+              const blockClass = mIdx === 5 ? 'month-block page-break-after' : 'month-block';
+              return (
+                <div key={monthName} className={blockClass}>
+                  <h3>{monthName}</h3>
+                  <table className="calendar-table">
+                    <tbody>
+                      {(() => {
+                        const rows = [];
+                        const monthData = byMonth[mIdx];
+                        for (let i = 0; i < monthData.length; i += 7) {
+                          rows.push(
+                            <tr key={i}>
+                              {monthData.slice(i, i + 7).map((item, j) => [
+                                <td key={`d${i+j}`} className="date-cell">{item.day}</td>,
+                                <td key={`t${i+j}`} className="temp-cell">{item.highTemp}<span style={{fontSize: '0.9em'}}>&deg;</span></td>
+                              ])}
+                              {/* Fill empty cells if last row is incomplete */}
+                              {Array.from({ length: 7 - (monthData.slice(i, i + 7).length) }).map((_, k) => [
+                                <td key={`ed${i+k}`}></td>,
+                                <td key={`et${i+k}`}></td>
+                              ])}
+                            </tr>
+                          );
+                        }
+                        return rows;
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            });
           })()}
         </div>
       )}
